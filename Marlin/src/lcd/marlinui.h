@@ -286,10 +286,10 @@ public:
     static void refresh_backlight_timeout();
   #endif
  
-  #if HAS_SCREEN_TIMEOUT
-    #define SCREEN_TIMEOUT_MIN 0    // units in minutes
-    #define SCREEN_TIMEOUT_MAX 99   // units in minutes
-    static uint16_t screen_timeout;
+  #if HAS_DISPLAY_SLEEP
+    #define SLEEP_TIMEOUT_MIN 0
+    #define SLEEP_TIMEOUT_MAX 99
+    static uint8_t sleep_timeout_minutes;
     static millis_t screen_timeout_millis;
     static void refresh_screen_timeout();
   #endif

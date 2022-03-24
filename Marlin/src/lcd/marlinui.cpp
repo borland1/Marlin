@@ -180,21 +180,23 @@ constexpr uint8_t epps = ENCODER_PULSES_PER_STEP;
 #endif
 
 #if LCD_BACKLIGHT_TIMEOUT
+
   uint16_t MarlinUI::lcd_backlight_timeout; // Initialized by settings.load()
   millis_t MarlinUI::backlight_off_ms = 0;
   void MarlinUI::refresh_backlight_timeout() {
     backlight_off_ms = lcd_backlight_timeout ? millis() + lcd_backlight_timeout * 1000UL : 0;
     WRITE(LCD_BACKLIGHT_PIN, HIGH);
   }
-#endif
 
-#if HAS_SCREEN_TIMEOUT
-  uint16_t MarlinUI::screen_timeout; // Initialized by settings.load( )
+#elif HAS_DISPLAY_SLEEP
+
+  uint8_t MarlinUI::sleep_timeout_minutes; // Initialized by settings.load()
   millis_t MarlinUI::screen_timeout_millis = 0;
   void MarlinUI::refresh_screen_timeout() {
-    screen_timeout_millis = screen_timeout ? millis() + screen_timeout * 60000UL : 0;
+    screen_timeout_millis = sleep_timeout_minutes ? millis() + sleep_timeout_minutes * 60UL * 1000UL : 0;
     sleep_off(); 
   }
+
 #endif
 
 void MarlinUI::init() {
@@ -1052,9 +1054,7 @@ void MarlinUI::init() {
 
           #if LCD_BACKLIGHT_TIMEOUT
             refresh_backlight_timeout();
-          #endif
-
-          #if HAS_SCREEN_TIMEOUT
+          #elif HAS_DISPLAY_SLEEP
             refresh_screen_timeout();
           #endif
           
@@ -1167,12 +1167,9 @@ void MarlinUI::init() {
           WRITE(LCD_BACKLIGHT_PIN, LOW); // Backlight off
           backlight_off_ms = 0;
         }
-      #endif
-      
-      #if HAS_SCREEN_TIMEOUT
-        if (screen_timeout_millis && ELAPSED(ms, screen_timeout_millis)) {
+      #elif HAS_DISPLAY_SLEEP
+        if (screen_timeout_millis && ELAPSED(ms, screen_timeout_millis))
           sleep_on();
-        }
       #endif      
 
       // Change state of drawing flag between screen updates

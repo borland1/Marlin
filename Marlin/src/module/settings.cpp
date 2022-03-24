@@ -398,17 +398,12 @@ typedef struct SettingsDataStruct {
   uint8_t lcd_brightness;                               // M256 B
 
   //
-  // LCD_BACKLIGHT_TIMEOUT
+  // Display Sleep
   //
   #if LCD_BACKLIGHT_TIMEOUT
-    uint16_t lcd_backlight_timeout;                     // (G-code needed)
-  #endif
-  
-  //
-  // SCREEN_TIMEOUT
-  //
-  #if HAS_SCREEN_TIMEOUT
-    uint16_t screen_timeout;
+    uint16_t lcd_backlight_timeout;                     // M255 S
+  #elif HAS_DISPLAY_SLEEP
+    uint8_t sleep_timeout_minutes;                      // M255 S
   #endif
   
   //
@@ -630,9 +625,7 @@ void MarlinSettings::postprocess() {
 
   #if LCD_BACKLIGHT_TIMEOUT
     ui.refresh_backlight_timeout();
-  #endif
-  
-  #if HAS_SCREEN_TIMEOUT
+  #elif HAS_DISPLAY_SLEEP
     ui.refresh_screen_timeout();
   #endif
 }
@@ -1141,20 +1134,14 @@ void MarlinSettings::postprocess() {
     }
 
     //
-    // LCD Backlight Timeout
+    // LCD Backlight / Sleep Timeout
     //
     #if LCD_BACKLIGHT_TIMEOUT
       EEPROM_WRITE(ui.lcd_backlight_timeout);
+    #elif HAS_DISPLAY_SLEEP
+      EEPROM_WRITE(ui.sleep_timeout_minutes);
     #endif
-    
-    //
-    // Screen Timeout
-    //
-    #if HAS_SCREEN_TIMEOUT
-      EEPROM_WRITE(ui.screen_timeout);
-    #endif
-    
-    
+
     //
     // Controller Fan
     //
@@ -1163,7 +1150,7 @@ void MarlinSettings::postprocess() {
       #if ENABLED(USE_CONTROLLER_FAN)
         const controllerFan_settings_t &cfs = controllerFan.settings;
       #else
-        controllerFan_settings_t cfs = controllerFan_defaults;
+        constexpr controllerFan_settings_t cfs = controllerFan_defaults;
       #endif
       EEPROM_WRITE(cfs);
     }
@@ -2073,17 +2060,12 @@ void MarlinSettings::postprocess() {
       }
 
       //
-      // LCD Backlight Timeout
+      // LCD Backlight / Sleep Timeout
       //
       #if LCD_BACKLIGHT_TIMEOUT
         EEPROM_READ(ui.lcd_backlight_timeout);
-      #endif
-      
-      //
-      // Screen Timeout
-      //
-      #if HAS_SCREEN_TIMEOUT
-        EEPROM_READ(ui.screen_timeout);
+      #elif HAS_DISPLAY_SLEEP
+        EEPROM_READ(ui.sleep_timeout_minutes);
       #endif
       
       //
@@ -3120,17 +3102,12 @@ void MarlinSettings::reset() {
   TERN_(HAS_LCD_BRIGHTNESS, ui.brightness = LCD_BRIGHTNESS_DEFAULT);
 
   //
-  // LCD Backlight Timeout
+  // LCD Backlight / Sleep Timeout
   //
   #if LCD_BACKLIGHT_TIMEOUT
     ui.lcd_backlight_timeout = LCD_BACKLIGHT_TIMEOUT;
-  #endif
-
-  //
-  // Screen Timeout
-  //
-  #if HAS_SCREEN_TIMEOUT
-    ui.screen_timeout = SCREEN_TIMEOUT;
+  #elif HAS_DISPLAY_SLEEP
+    ui.sleep_timeout_minutes = DISPLAY_SLEEP_MINUTES;
   #endif
   
   //
@@ -3429,6 +3406,11 @@ void MarlinSettings::reset() {
     // LCD Contrast
     //
     TERN_(HAS_LCD_CONTRAST, gcode.M250_report(forReplay));
+
+    //
+    // Display Sleep
+    //
+    TERN_(HAS_DISPLAY_SLEEP, gcode.M255_report(forReplay));
 
     //
     // LCD Brightness
